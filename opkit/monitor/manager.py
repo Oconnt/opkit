@@ -1,10 +1,13 @@
 from collections import OrderedDict
 
 from opkit.common.constants import Resource
-from opkit.monitor.base import BaseMonitor
+from opkit.monitor.base import (
+    BaseMonitor,
+    Check
+)
 
 
-class Manager(object):
+class Manager(Check):
     """ 管理类 """
 
     __MONITOR = {
@@ -14,30 +17,18 @@ class Manager(object):
 
     def __init__(self, parts=None):
         if parts:
-            self._check_parts(parts, self.__MONITOR.keys())
+            self.check_parts(parts, self.__MONITOR.keys())
         else:
             parts = self.__MONITOR.keys()
 
         for part in parts:
             setattr(self, part, self.__MONITOR[part]())
 
-    def _check_parts(self, parts, expect):
-        iter_types = (list, tuple, set, frozenset)
-        if not isinstance(parts, iter_types):
-            raise TypeError("invalid parts type %s" % type(parts))
-
-        if not isinstance(expect, iter_types):
-            raise TypeError("invalid expect type %s" % type(expect))
-
-        parts = set(parts)
-        if not all([part in expect for part in parts]):
-            raise ValueError("invalid parts %s" % parts)
-
-    def usage(self, parts=None):
+    def os_usage(self, parts=None):
         if parts:
-            self._check_parts(parts, Resource.all_usage_key())
+            self.check_parts(parts, Resource.all_os_usage_key())
         else:
-            parts = Resource.all_usage_key()
+            parts = Resource.all_os_usage_key()
 
         res = OrderedDict()
 
@@ -55,7 +46,9 @@ class Manager(object):
 
         return res
 
+    def proc_usage(self, pid=None, proc_name=None):
+        proc_monitor = getattr(self, Resource.PROC.value, None)
+        if not proc_monitor:
+            setattr(self, Resource.PROC.value, self.__MONITOR[Resource.PROC.value])
 
-
-
-
+        return proc_monitor.usage(pid=pid, proc_name=proc_name)

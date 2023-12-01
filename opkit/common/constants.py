@@ -20,8 +20,24 @@ class Resource(ValueEnum):
     PROC = "process"
 
     @classmethod
-    def all_usage_key(cls):
+    def all_os_usage_key(cls):
         return [cls.CPU.value, cls.MEM.value, cls.DISK.value]
+
+    @classmethod
+    def all_proc_usage_key(cls):
+        return [cls.CPU.value, cls.MEM.value]
+
+    @staticmethod
+    def wrap(resource, unit=None):
+        if unit and isinstance(unit, Unit):
+            return "".join([resource, '(', unit.value, ')'])
+
+        return resource
+
+
+class Unit(ValueEnum):
+
+    PERCENT = "%"
 
 
 class CPUMetrics(ValueEnum):
