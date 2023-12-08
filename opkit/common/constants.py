@@ -1,7 +1,13 @@
 from enum import Enum
 
-
+# 根路径
 ROOT_PATH = "/"
+# 默认记录文件
+DEFAULT_RECORD_FILE = "/var/log/opkit/grap.log"
+# 本机ip
+LOCALHOST = "127.0.0.1"
+# 最大线程数
+MAX_WORKER = 10
 
 
 class ValueEnum(Enum):

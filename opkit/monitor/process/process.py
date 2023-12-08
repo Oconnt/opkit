@@ -55,7 +55,11 @@ class ProcessMonitor(BaseMonitor, Check):
         res = OrderedDict()
 
         if not pid:
-            pid = self._find_pid(proc_name)
+            if not isinstance(proc_name, str):
+                raise TypeError("process name must be str, type: %s", type(proc_name))
+
+            name = proc_name.lower()
+            pid = self._find_pid(name)
             if not pid:
                 return res
 
@@ -93,7 +97,7 @@ class ProcessMonitor(BaseMonitor, Check):
         if not isinstance(attrs, iter_types):
             raise TypeError("invalid attrs type %s" % type(attrs))
 
-        attrs = set(attrs)
+        attrs = sorted(attrs, key=attrs.index)
         fir_res = OrderedDict()
         for attr in attrs:
             if not isinstance(attr, str):
