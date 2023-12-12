@@ -2,6 +2,7 @@ from concurrent import futures
 from scapy.sendrecv import sniff
 
 from opkit.common.constants import MAX_WORKER
+from opkit.utils.print_util import print_dict_list
 from opkit.grab import handle
 
 
@@ -13,7 +14,7 @@ class Manager(object):
         self.timeout = timeout
 
     def _grab(self,
-              prn=handle.record,
+              prn=handle.output_log(),
               count=0,
               timeout=None,
               iface=None,
@@ -42,8 +43,8 @@ class Manager(object):
         if filters:
             sniff_params.update(filter=filters)
 
-        pkg = sniff(**sniff_params)
-        return pkg
+        pkgs = sniff(**sniff_params)
+        return self._handle_pkg(pkgs)
 
     @staticmethod
     def _generate_filters(protool=None,
@@ -81,6 +82,7 @@ class Manager(object):
         return bpf_filter
 
     def grab(self, worker=1, **kwargs):
+        print("start grab packet, worker thread count: ", worker)
         with self.pool as execute:
             fs = []
             for _ in range(worker):
@@ -90,7 +92,12 @@ class Manager(object):
             for f in futures.as_completed(fs):
                 try:
                     res = f.result(self.timeout)
-                    print("pkg: {}".format(res))
+                    print_dict_list(res)
                 except Exception as e:
                     print("Error occurred: {}".format(e))
+                    raise
 
+        print("grab packet done")
+
+    def _handle_pkg(self, pkgs):
+        return [handle.analysis(pkg) for pkg in pkgs]
