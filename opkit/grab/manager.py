@@ -2,7 +2,7 @@ from concurrent import futures
 from scapy.sendrecv import sniff
 
 from opkit.common.constants import MAX_WORKER
-from opkit.utils.print_util import print_dict_list
+from opkit.utils.print_util import print_dict_list, find_dict_data
 from opkit.grab import handle
 
 
@@ -14,7 +14,7 @@ class Manager(object):
         self.timeout = timeout
 
     def _grab(self,
-              prn=handle.output_log(),
+              prn=handle.output_log,
               count=0,
               timeout=None,
               iface=None,
@@ -23,9 +23,13 @@ class Manager(object):
               dip=None,
               sport=None,
               dport=None,
+              pre_kw=None
               ):
+        if not pre_kw:
+            pre_kw = {}
+
         sniff_params = {
-            "prn": prn,
+            "prn": prn(**pre_kw),
             "count": count,
             "timeout": timeout,
             "iface": iface
@@ -68,11 +72,11 @@ class Manager(object):
 
         # 添加源端口过滤条件
         if sport:
-            filters.append(f"src port {sport}")
+            filters.append("src port {}".format(sport))
 
         # 添加目的端口过滤条件
         if dport:
-            filters.append(f"dst port {dport}")
+            filters.append("dst port {}".format(dport))
 
         # 组合所有过滤条件
         bpf_filter = ""
@@ -81,7 +85,7 @@ class Manager(object):
 
         return bpf_filter
 
-    def grab(self, worker=1, **kwargs):
+    def grab(self, worker=1, include=None, exclude=None, **kwargs):
         print("start grab packet, worker thread count: ", worker)
         with self.pool as execute:
             fs = []
@@ -92,7 +96,7 @@ class Manager(object):
             for f in futures.as_completed(fs):
                 try:
                     res = f.result(self.timeout)
-                    print_dict_list(res)
+                    print_dict_list(res, include=include, exclude=exclude)
                 except Exception as e:
                     print("Error occurred: {}".format(e))
                     raise
