@@ -24,4 +24,3 @@ def dupe_target(gateway_ip, gateway_mac, dst_ip, dst_mac):
         send(dupe_gateway)
     except Exception as e:
         print("send arp packet fail, err: {}".format(e))
-
