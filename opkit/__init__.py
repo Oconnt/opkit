@@ -9,4 +9,4 @@ if __name__ == '__main__':
     # print_dict(m.process.info(19184, attrs=["name", "tcp_count", "udp_count"]))
 
     g = Grab()
-    g.grab(count=1, include=["src_mac", "dst_mac"], exclude=['data'])
+    g.grab(count=1, pid=47739, exclude=['data'])

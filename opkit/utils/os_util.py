@@ -1,4 +1,6 @@
 import os
+import subprocess
+import sys
 
 
 def is_exist(path):
@@ -26,3 +28,19 @@ def create_file(f_path):
 def create_dir(dir_path):
     """ 创建文件夹 """
     os.makedirs(dir_path, exist_ok=True)
+
+
+def get_netns_pids(namespace):
+    try:
+        command = "ip netns pids {}".format(namespace)
+        output = subprocess.check_output(command, shell=True).decode("utf-8")
+        pids = output.strip().split("\n")
+    except Exception:
+        # TODO
+        pids = []
+
+    return pids
+
+
+if __name__ == '__main__':
+    print(sys.argv)

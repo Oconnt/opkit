@@ -29,9 +29,9 @@ DEFAULT_ENCODING = "utf-8"
 DEFAULT_FORMAT = "%(asctime)s %(name)s %(thread)d %(levelname)s %(message)s"
 
 # =================================== socket ==================================
-prefix = "IPPROTO_"
-proto_table = {num: name[len(prefix):] for name, num in vars(socket).items()
-               if name.startswith(prefix)}
+PREFIX = "IPPROTO_"
+proto_table = {num: name[len(PREFIX):] for name, num in vars(socket).items()
+               if name.startswith(PREFIX)}
 
 
 class ValueEnum(Enum):

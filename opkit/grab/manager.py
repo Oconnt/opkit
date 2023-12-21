@@ -1,8 +1,11 @@
 from concurrent import futures
+
+import psutil
 from scapy.sendrecv import sniff
 
 from opkit.common.constants import MAX_WORKER
-from opkit.utils.print_util import print_dict_list, find_dict_data
+from opkit.utils.print_util import print_dict_list
+from opkit.utils.os_util import get_netns_pids
 from opkit.grab import handle
 
 
@@ -17,6 +20,8 @@ class Manager(object):
               prn=handle.output_log,
               count=0,
               timeout=None,
+              pid=None,
+              namespace=None,
               iface=None,
               protool=None,
               sip=None,
@@ -36,6 +41,8 @@ class Manager(object):
         }
 
         query = {
+            'pid': pid,
+            'namespace': namespace,
             'protool': protool,
             'sip': sip,
             'dip': dip,
@@ -50,12 +57,14 @@ class Manager(object):
         pkgs = sniff(**sniff_params)
         return self._handle_pkg(pkgs)
 
-    @staticmethod
-    def _generate_filters(protool=None,
+    def _generate_filters(self,
+                          protool=None,
                           sip=None,
                           dip=None,
                           sport=None,
                           dport=None,
+                          pid=None,
+                          namespace=None
                           ):
         filters = []
         # 添加协议过滤条件
@@ -77,6 +86,18 @@ class Manager(object):
         # 添加目的端口过滤条件
         if dport:
             filters.append("dst port {}".format(dport))
+
+        # 添加pid过滤条件
+        if pid:
+            ports = self.get_process_ports(pid)
+            for port in ports:
+                filters.append("port {}".format(port))
+
+        # 添加namespace过滤条件
+        if namespace:
+            ports = self.get_netns_ports(namespace)
+            for port in ports:
+                filters.append("port {}".format(port))
 
         # 组合所有过滤条件
         bpf_filter = ""
@@ -105,3 +126,21 @@ class Manager(object):
 
     def _handle_pkg(self, pkgs):
         return [handle.analysis(pkg) for pkg in pkgs]
+
+    def get_process_ports(self, pid):
+        connections = psutil.Process(pid).connections()
+        ports = []
+        for conn in connections:
+            if conn.status == 'LISTEN':
+                laddr = conn.laddr
+                ports.append(laddr.port)
+
+        return ports
+
+    def get_netns_ports(self, namespace):
+        pids = get_netns_pids(namespace)
+        ports = []
+        for pid in pids:
+            ports.extend(self.get_process_ports(pid))
+
+        return ports
