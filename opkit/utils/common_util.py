@@ -29,3 +29,10 @@ def get_subclasses(cls, modules):
 
     subclasses = list(dict.fromkeys(subclasses))
     return subclasses
+
+
+def get_method_params(cls, method_name):
+    method = getattr(cls, method_name)
+    params = inspect.signature(method).parameters
+
+    return params

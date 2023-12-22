@@ -4,12 +4,12 @@ import psutil
 from scapy.sendrecv import sniff
 
 from opkit.common.constants import MAX_WORKER
-from opkit.utils.print_util import print_dict_list
 from opkit.utils.os_util import get_netns_pids
-from opkit.grab import handle
+from opkit.kit.base import BaseManager
+from opkit.kit.grab import handle
 
 
-class Manager(object):
+class Manager(BaseManager):
     """ 抓包管理 """
 
     def __init__(self, init_workers=1, timeout=30):
@@ -23,7 +23,7 @@ class Manager(object):
               pid=None,
               namespace=None,
               iface=None,
-              protool=None,
+              protocol=None,
               sip=None,
               dip=None,
               sport=None,
@@ -36,14 +36,14 @@ class Manager(object):
         sniff_params = {
             "prn": prn(**pre_kw),
             "count": count,
-            "timeout": timeout,
+            "timeout": timeout or self.timeout,
             "iface": iface
         }
 
         query = {
             'pid': pid,
             'namespace': namespace,
-            'protool': protool,
+            'protocol': protocol,
             'sip': sip,
             'dip': dip,
             'sport': sport,
@@ -58,7 +58,7 @@ class Manager(object):
         return self._handle_pkg(pkgs)
 
     def _generate_filters(self,
-                          protool=None,
+                          protocol=None,
                           sip=None,
                           dip=None,
                           sport=None,
@@ -68,8 +68,8 @@ class Manager(object):
                           ):
         filters = []
         # 添加协议过滤条件
-        if protool:
-            filters.append(protool)
+        if protocol:
+            filters.append(protocol)
 
         # 添加源IP地址过滤条件
         if sip:
@@ -106,28 +106,32 @@ class Manager(object):
 
         return bpf_filter
 
-    def grab(self, worker=1, include=None, exclude=None, **kwargs):
-        print("start grab packet, worker thread count: ", worker)
+    def grab(self, worker=1, worker_params=None, **kwargs):
         with self.pool as execute:
             fs = []
-            for _ in range(worker):
+            # 使用多个线程不同参数抓包
+            if worker > 1 and len(worker_params) == worker_params:
+                for params in worker_params:
+                    future = execute.submit(self._grab, **params)
+                    fs.append(future)
+            else:
                 future = execute.submit(self._grab, **kwargs)
                 fs.append(future)
 
             for f in futures.as_completed(fs):
                 try:
                     res = f.result(self.timeout)
-                    print_dict_list(res, include=include, exclude=exclude)
                 except Exception as e:
                     print("Error occurred: {}".format(e))
                     raise
 
-        print("grab packet done")
+        return res
 
     def _handle_pkg(self, pkgs):
         return [handle.analysis(pkg) for pkg in pkgs]
 
     def get_process_ports(self, pid):
+        pid = int(pid)
         connections = psutil.Process(pid).connections()
         ports = []
         for conn in connections:

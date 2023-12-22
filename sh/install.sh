@@ -120,6 +120,7 @@ declare -A arm_vers_map=(
 version="$1"
 if [ -z $version ];then
     echo "请指定java版本"
+    exit 1
 fi
 
 source /mry/sh/common.sh
@@ -169,6 +170,9 @@ EOF
 EOF
 
     fi
+
+    chmod +x ${M_BIN}/mjava
+    linfo "mjava 安装成功！"
 }
 
 function install_python() {
@@ -177,6 +181,7 @@ function install_python() {
 version="$1"
 if [ -z $version ];then
     echo "请指定python版本!"
+    exit 1
 fi
 
 dir="/mry/lib/python/${version}"
@@ -187,27 +192,44 @@ python_tar_file=$(echo $download_url | awk -F/ '{print $NF}')
 echo "====================开始下载${python_tar_file}到${dir}===================="
 wget -P $dir $download_url && tar Cxzvf $dir ${dir}/${python_tar_file}
 
-python_dir=$(tar tf ${dir}/${java_tar_file} | head -n 1 | cut -f1 -d"/")
+python_dir=$(tar tf ${dir}/${python_tar_file} | head -n 1 | cut -f1 -d"/")
 python_src=${dir}/${python_dir}
 
 # 先安装gcc等依赖
-yum -y install gcc openssl-devel bzip2-devel libffi-devel
+gcc -v &>/dev/null
+if [ $? -ne 0 ];then
+    yum -y install gcc openssl-devel bzip2-devel libffi-devel
+fi
 
 # 编译安装
 cd $python_src
 ./configure --prefix=$dir && make && make install
 
-# 设置动态链接
-for f in ${dir}/bin/*;do
-    ln -sf $f /mry/bin/
-done
+# 设置环境变量
+source /mry/sh/common.sh
+add_profile 'export PATH=$PATH:"'"$dir"'/bin"'
 
-python -V
+if [ ${version:0:1} == '3' ];then
+    version_info=$(python3 -V)
+else
+    version_info=$(python -V)
+fi
+
+if [ $? -eq 0 ];then
+    echo "${version_info} 安装成功！"
+fi
+
+# 清理压缩包和源码目录
+rm -f ${dir}/${python_tar_file}
+rm -rf $python_src
 EOF
     else
         cat <<- 'EOF'> ${M_BIN}/mpy
 EOF
     fi
+
+    chmod +x ${M_BIN}/mpy
+    linfo "mpy 安装成功！"
 }
 
 function install_go() {
@@ -216,6 +238,7 @@ function install_go() {
 version="$1"
 if [ -z $version ];then
     echo "请指定go版本!"
+    exit 1
 fi
 
 source /mry/sh/common.sh
@@ -275,29 +298,6 @@ function install_k8s() {
     source /mry/sh/k8s.sh
 }
 
-function init_profile() {
-    cat <<- 'EOF' > $MRY_PROFILE
-# system
-alias md="mkdir"
-alias rd="rmdir"
-alias tailf="tail -f"
-alias ginr="grep -inr"
-alias grepc="grep -c"
-alias vi="vim"
-alias h="history"
-
-USER=`whoami`
-HOSTNAME=`hostname`
-HISTSIZE=1000
-TMOUT=360000
-
-export USER HOSTNAME HISTSIZE TMOUT PATH=$PATH:/mry/bin:/mry/sh
-EOF
-
-    chmod +rwx $MRY_PROFILE
-    source_profile
-}
-
 function set_mode() {
     # 测试次数增加到10次，减少误判率
     local ping_count=10
@@ -324,7 +324,7 @@ function mode_ch() {
 
 function set_repo() {
     if [ $ASKME -eq 1 ];then
-        read -rp "是否清理repo文件及元数据？" flag
+        read -rp "是否清理repo文件及元数据？(y/n): " flag
         if [ $flag = 'y' ];then
             rm -rf /etc/yum.repos.d/*
             yum clean metadata
@@ -343,8 +343,6 @@ function set_repo() {
 }
 
 function init_mry() {
-    mkdir -p $MRY_DIR $M_BIN $M_LIB $M_OPT
-    init_profile
     set_mode
     set_repo
 }
@@ -354,6 +352,7 @@ function install_all() {
     install_python
     install_go
     install_redis
+    install_k8s
 }
 
 function install_soft() {
@@ -365,6 +364,9 @@ function install_soft() {
             case $arg in
                 redis)
                     install_redis
+                    ;;
+                k8s)
+                    install_k8s
                     ;;
                 java)
                     install_java

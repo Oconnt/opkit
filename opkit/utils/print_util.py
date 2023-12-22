@@ -1,16 +1,12 @@
-import tabulate
+from collections import OrderedDict
 from prettytable import PrettyTable
 
 
-def print_dict(data):
+def print_dict(data, include=None, exclude=None):
     if not isinstance(data, dict):
         return
 
-    table = PrettyTable()
-    table.field_names = list(data.keys())
-    table.add_row(list(data.values()))
-
-    print(table)
+    print_dict_list([data], include, exclude)
 
 
 def print_dict_list(ls, include=None, exclude=None):
@@ -40,13 +36,21 @@ def print_dict_list(ls, include=None, exclude=None):
     elif exclude:
         res = __exclude(res, exclude)
 
-    table = tabulate.tabulate(res, headers='keys')
+    table = PrettyTable()
+    lens = [len(vals) for vals in res.values()]
+    col_len = max(*lens)
+    for field, vals in res.items():
+        cot = len(vals)
+        if cot < col_len:
+            vals.extend((col_len - cot) * [""])
+
+        table.add_column(field, vals)
 
     print(table)
 
 
 def find_all_data(arr):
-    res = dict()
+    res = OrderedDict()
 
     for d in arr:
         for k, v in d.items():
