@@ -3,9 +3,8 @@ import psutil
 from collections import OrderedDict
 from datetime import datetime
 
-from opkit.monitor.base import (
+from opkit.kit.monitor.base import (
     BaseMonitor,
-    Check
 )
 from opkit.common.constants import (
     Resource,
@@ -13,7 +12,7 @@ from opkit.common.constants import (
 )
 
 
-class ProcessMonitor(BaseMonitor, Check):
+class ProcessMonitor(BaseMonitor):
 
     MONITOR_NAME = "process"
 
@@ -25,59 +24,46 @@ class ProcessMonitor(BaseMonitor, Check):
         :param parts:
         :return:
         """
-        if parts:
-            self.check_parts(parts, Resource.all_proc_usage_key())
-        else:
-            parts = Resource.all_proc_usage_key()
+        return self.info(
+            pid,
+            proc_name,
+            ["cpu", "memory"] if not parts else parts
+        )
 
-        res = OrderedDict()
-        if not pid:
-            pid = self._find_pid(proc_name)
-            if not pid:
-                return res
-
-        p = psutil.Process(pid)
-        unit = Unit.PERCENT
-
-        for part in parts:
-            res[Resource.wrap(part, unit)] = p.cpu_percent()
-
-        return res
-
-    def info(self, pid=None, proc_name=None, attrs=None):
+    def info(self, pid=None, proc_name=None, parts=None):
         """
         获取进程信息
         :param pid: 进程id
         :param proc_name: 进程名
-        :param attrs: 返回属性集
+        :param parts: 返回属性集
         :return:
         """
         res = OrderedDict()
 
         if not pid:
             if not isinstance(proc_name, str):
-                raise TypeError("process name must be str, type: %s", type(proc_name))
+                raise TypeError("process name must be str, type: %s", type(proc_name))  # noqa
 
             name = proc_name.lower()
             pid = self._find_pid(name)
             if not pid:
                 return res
 
+        pid = int(pid)
         p = psutil.Process(pid)
-        percent = Unit.PERCENT
 
         res["pid"] = p.pid
         res["name"] = p.name()
-        res["create_time"] = datetime.fromtimestamp(p.create_time()).strftime("%Y-%m-%d %H:%M:%S")
-        res["running_time"] = datetime.now() - datetime.fromtimestamp(p.create_time())
+        res["create_time"] = datetime.fromtimestamp(p.create_time()).strftime("%Y-%m-%d %H:%M:%S")  # noqa
+        res["running_time"] = datetime.now() - datetime.fromtimestamp(p.create_time())  # noqa
         res["status"] = p.status()
-        res[Resource.wrap(Resource.CPU.value, percent)] = "{:.2f}".format(p.cpu_percent())
-        res[Resource.wrap(Resource.MEM.value, percent)] = "{:.2f}".format(p.memory_percent())
+        res[Resource.CPU.value] = "{:.2f}".format(p.cpu_percent())
+        res[Resource.MEM.value] = "{:.2f}".format(p.memory_percent())
         res["tcp_count"] = len(p.connections("tcp"))
         res["udp_count"] = len(p.connections("udp"))
 
-        if attrs:
-            res = self._filter_attrs(res, attrs)
+        if parts:
+            res = self._filter_attrs(res, parts)
 
         return res
 

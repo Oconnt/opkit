@@ -1,7 +1,6 @@
 #!/bin/bash
 
 MRY_PROFILE="/etc/profile.d/mry_profile.sh"
-DOWNLOAD_FILE="/mry/common/download"
 MRY_DIR=(
     "/mry"
     "/mry/bin"
@@ -28,10 +27,11 @@ alias rmrf="rm -rf"
 alias rmf="rm -f"
 alias sctl="systemctl"
 
+HISTFILE=~/.bash_history-$$
 HISTSIZE=1000
 TMOUT=36000
 
-export h md rd vi u g lsp lsi cpr rmrf rmf sctl HISTSIZE TMOUT PATH="$PATH:/mry/bin"
+export h md rd vi u g lsp lsi cpr rmrf rmf sctl HISTFILE HISTSIZE TMOUT PATH="$PATH:/mry/bin"
 EOF
     chmod +rw $MRY_PROFILE
     source $MRY_PROFILE
@@ -47,15 +47,6 @@ function md_mry() {
     do
         mkdir -p $dir
     done
-}
-
-function download() {
-    if [ -e $DOWNLOAD_FILE ]; then
-        while read line
-        do
-            wget -P /mry/resource/ $line
-        done < $DOWNLOAD_FILE
-    fi
 }
 
 function install_env() {

@@ -1,6 +1,6 @@
 import psutil
 
-from opkit.monitor.base import BaseMonitor
+from opkit.kit.monitor.base import BaseMonitor
 from opkit.common.constants import ROOT_PATH
 
 

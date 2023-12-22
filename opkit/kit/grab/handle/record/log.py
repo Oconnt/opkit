@@ -2,7 +2,7 @@ from opkit.common.constants import (
     DEFAULT_FORMAT,
 )
 from opkit.common.log import logging, generate_grab_log
-from opkit.grab.handle.base import analysis
+from opkit.kit.grab.handle.base import analysis
 
 
 def output_log(name='grap_output_log', log_file=None,
