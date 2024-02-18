@@ -78,7 +78,7 @@ function check_resource_integrity() {
     for f in "${CHECK_FILE_LIST[@]}"
     do
         if [ ! -e "$f" ]; then
-            return
+            exit 1
         fi
     done
 }

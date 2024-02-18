@@ -389,7 +389,7 @@ function install_soft() {
 source /mry/sh/common.sh
 if [ $? -ne 0 ];then
     echo "加载/mry/sh/common.sh失败。"
-    return
+    exit 1
 fi
 
 # 判断是否是centos7

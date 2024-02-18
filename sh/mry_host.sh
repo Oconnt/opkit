@@ -22,6 +22,8 @@ alias g="groups"
 alias lsp="lsof -p"
 alias lsi="lsof -i"
 alias ports="netstat -anp"
+alias psef="ps -ef"
+alias psg="ps -ef | grep"
 alias cpr="cp -r"
 alias rmrf="rm -rf"
 alias rmf="rm -f"
@@ -31,7 +33,7 @@ HISTFILE=~/.bash_history-$$
 HISTSIZE=1000
 TMOUT=36000
 
-export h md rd vi u g lsp lsi cpr rmrf rmf sctl HISTFILE HISTSIZE TMOUT PATH="$PATH:/mry/bin"
+export HISTFILE HISTSIZE TMOUT PATH="$PATH:/mry/bin"
 EOF
     chmod +rw $MRY_PROFILE
     source $MRY_PROFILE
