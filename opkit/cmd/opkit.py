@@ -65,6 +65,8 @@ def monitor(part, pid, info):
 @click.option('-w', '--worker',
               default=1,
               help='Specify worker thread, default 1')
+@click.option('-f', '--filters',
+              help='Packet filter rule')
 @click.option('-i', '--iface',
               help='Network card')
 @click.option('-p', '--pid',
@@ -87,6 +89,9 @@ def monitor(part, pid, info):
 @click.option('-n', '--namespace',
               help='Setting a network namespace will filter all process '
                    'packages under this namespace')
+@click.option('-m', '--mark',
+              default='and',
+              help='Filter conditional connectors, and or or')
 @click.option('-k', '--worker_params',
               help='Multi threading parameters')
 @click.option('-t', '--timeout',
@@ -96,11 +101,12 @@ def monitor(part, pid, info):
               help='Include column, separated by commas')
 @click.option('-E', '--exclude',
               help='Exclude column, separated by commas')
-def grab(count, worker, iface, pid, protocol, sip, dip, sport, dport,
-         namespace, worker_params, timeout, include, exclude):
+def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
+         namespace, mark, worker_params, timeout, include, exclude):
     params = {
         'count': count,
         'worker': worker,
+        'filters': filters,
         'iface': iface,
         'pid': pid,
         'protocol': protocol,
@@ -109,6 +115,7 @@ def grab(count, worker, iface, pid, protocol, sip, dip, sport, dport,
         'sport': sport,
         'dport': dport,
         'namespace': namespace,
+        'mark': mark,
         'worker_params': worker_params
     }
 

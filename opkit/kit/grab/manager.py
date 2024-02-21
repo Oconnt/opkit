@@ -19,6 +19,7 @@ class Manager(BaseManager):
     def _grab(self,
               prn=handle.output_log,
               count=0,
+              filters=None,
               timeout=None,
               pid=None,
               namespace=None,
@@ -28,6 +29,7 @@ class Manager(BaseManager):
               dip=None,
               sport=None,
               dport=None,
+              mark='and',
               pre_kw=None
               ):
         if not pre_kw:
@@ -47,9 +49,10 @@ class Manager(BaseManager):
             'sip': sip,
             'dip': dip,
             'sport': sport,
-            'dport': dport
+            'dport': dport,
+            'connector': mark
         }
-        filters = self._generate_filters(**query)
+        filters = filters or self._generate_filters(**query)
 
         if filters:
             sniff_params.update(filter=filters)
@@ -64,7 +67,8 @@ class Manager(BaseManager):
                           sport=None,
                           dport=None,
                           pid=None,
-                          namespace=None
+                          namespace=None,
+                          connector='and'
                           ):
         filters = []
         # 添加协议过滤条件
@@ -102,7 +106,8 @@ class Manager(BaseManager):
         # 组合所有过滤条件
         bpf_filter = ""
         if filters:
-            bpf_filter = " and ".join(filters)
+            conn_str = " {} ".format(connector)
+            bpf_filter = conn_str.join(filters)
 
         return bpf_filter
 
