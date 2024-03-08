@@ -6,7 +6,7 @@ from opkit.common.log import get_today_dir
 from opkit.utils.os_util import create_file
 
 
-def pcap(pcap_file=DEFAULT_PCAP_FILE, new=False):
+def output_pcap(pcap_file=DEFAULT_PCAP_FILE, new=False):
     """ 输出pcap文件 """
 
     def handler(pkg):

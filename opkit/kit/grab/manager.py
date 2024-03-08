@@ -3,7 +3,7 @@ from concurrent import futures
 import psutil
 from scapy.sendrecv import sniff
 
-from opkit.common.constants import MAX_WORKER
+from opkit.common.constants import MAX_WORKER, GrabOutFunc
 from opkit.utils.os_util import get_netns_pids
 from opkit.kit.base import BaseManager
 from opkit.kit.grab import handle
@@ -15,6 +15,10 @@ class Manager(BaseManager):
     def __init__(self, init_workers=1, timeout=30):
         self.pool = futures.ThreadPoolExecutor(max_workers=min(init_workers, MAX_WORKER))
         self.timeout = timeout
+        self.out_func = {
+            'log': handle.output_log,
+            'pcap': handle.output_pcap
+        }
 
     def _grab(self,
               prn=handle.output_log,
@@ -30,7 +34,8 @@ class Manager(BaseManager):
               sport=None,
               dport=None,
               mark='and',
-              pre_kw=None
+              pre_kw=None,
+              cert_path=None
               ):
         if not pre_kw:
             pre_kw = {}
@@ -58,7 +63,7 @@ class Manager(BaseManager):
             sniff_params.update(filter=filters)
 
         pkgs = sniff(**sniff_params)
-        return self._handle_pkg(pkgs)
+        return self._handle_pkg(pkgs, cert_path)
 
     def _generate_filters(self,
                           protocol=None,
@@ -132,8 +137,8 @@ class Manager(BaseManager):
 
         return res
 
-    def _handle_pkg(self, pkgs):
-        return [handle.analysis(pkg) for pkg in pkgs]
+    def _handle_pkg(self, pkgs, cert_path=None):
+        return [handle.analysis(pkg, cert_path) for pkg in pkgs]
 
     def get_process_ports(self, pid):
         pid = int(pid)

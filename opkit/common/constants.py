@@ -33,6 +33,9 @@ PREFIX = "IPPROTO_"
 proto_table = {num: name[len(PREFIX):] for name, num in vars(socket).items()
                if name.startswith(PREFIX)}
 
+# ==================================== PEM ====================================
+PEM_START_FLAG = "BEGIN CERTIFICATE"
+
 
 class ValueEnum(Enum):
 
@@ -96,3 +99,9 @@ class DiskMetrics(ValueEnum):
 class NetworkMetrics(ValueEnum):
 
     CONN_COUNT = "conn_count"
+
+
+class GrabOutFunc(ValueEnum):
+
+    LOG = 'log'
+    PCAP = 'pcap'

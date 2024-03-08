@@ -2,9 +2,10 @@ from scapy.layers.inet import IP, TCP, UDP
 from scapy.layers.l2 import Ether
 
 from opkit.common.constants import proto_table
+from opkit.utils import secret_util
 
 
-def analysis(packet, decode="utf-8"):
+def analysis(packet, decode="utf-8", cert_path=None):
     packet_dict = {}
 
     if packet.haslayer("Ethernet"):
@@ -31,17 +32,26 @@ def analysis(packet, decode="utf-8"):
 
     # 解析数据内容
     if packet.haslayer("Raw"):
-        packet_dict["data"] = _decode_raw(packet.getlayer("Raw"), decode)
+        packet_dict["data"] = _decode_raw(packet.getlayer("Raw"), decode, cert_path)  # noqa
 
     # 处理完毕后返回字典
     return packet_dict
 
 
-def _decode_raw(raw, decode="utf-8"):
+def _decode_raw(raw, decode="utf-8", cert_path=None):
     load = raw.load
 
-    try:
-        return load.decode(decode)
-    except Exception as e:
-        print("decode raw fail, err: {}".format(e))
-        return load
+    if cert_path:
+        # 如果传入证书则提取私钥解密
+        try:
+            private_key = secret_util.get_private_from_file(cert_path)
+            secret_util.decrypt(load, private_key)
+        except Exception as e:
+            print("decrypt ciphertext failed， err: {}".format(e))
+            return load
+    else:
+        try:
+            return load.decode(decode)
+        except Exception as e:
+            print("decode raw fail, err: {}".format(e))
+            return load

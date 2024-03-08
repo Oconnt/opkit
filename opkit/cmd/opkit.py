@@ -36,7 +36,14 @@ def opkit(version):
               is_flag=True,
               help='Output process info, Need to be used '
                    'in conjunction with - p')
-def monitor(part, pid, info):
+@click.option('-h', '--help',
+              is_flag=True,
+              help='Help info')
+def monitor(part, pid, info, help):
+    if help:
+        echo(click.get_current_context().get_help())
+        return
+
     monitor_manager = Kit.load('monitor')
     wrap_func = monitor_manager.wrap_echo
 
@@ -97,12 +104,22 @@ def monitor(part, pid, info):
 @click.option('-t', '--timeout',
               default=30,
               help='Packet capture timeout exit time, default 30s')
+@click.option('-o', '--out',
+              help='The output method after capturing the package, '
+                   'default output log, see kit.grab.handle for details')
 @click.option('-I', '--include',
               help='Include column, separated by commas')
 @click.option('-E', '--exclude',
               help='Exclude column, separated by commas')
+@click.option('-h', '--help',
+              is_flag=True,
+              help='Help info')
 def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
-         namespace, mark, worker_params, timeout, include, exclude):
+         namespace, mark, worker_params, timeout, out, include, exclude, help):
+    if help:
+        echo(click.get_current_context().get_help())
+        return
+
     params = {
         'count': count,
         'worker': worker,
@@ -123,6 +140,10 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
         'grab',
         **dict(init_workers=worker, timeout=timeout)
     )
+
+    func = grab_manager.out_func.get(out)
+    if func:
+        params['prn'] = func
 
     res = grab_manager.grab(**params)
     include_arr = include.split(',') if include else None
