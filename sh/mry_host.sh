@@ -10,6 +10,13 @@ MRY_DIR=(
     "/mry/resource"
     "/mry/log"
 )
+SH_FILE=(
+    "ca.sh"
+    "common.sh"
+    "install.sh"
+    "k8s.sh"
+)
+
 
 function mry_profile() {
     cat <<- 'EOF' > $MRY_PROFILE
@@ -56,9 +63,23 @@ function install_env() {
     set_ps1
 }
 
+function pull_opkit_shell() {
+    local opkit_url="https://raw.githubusercontent.com/Oconnt/opkit/master/sh"
+    for f in "${SH_FILE[@]}"
+    do
+        curl -o /mry/sh/$f ${opkit_url}/$f 2&1 > /dev/null
+        if [ $? -eq 0 ];then
+            echo "${f} pull done."
+        else
+            echo "${f} pull fail!"
+        fi
+    done
+}
+
 function main() {
     md_mry
     install_env
+    pull_opkit_shell
 }
 
 main

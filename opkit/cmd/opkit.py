@@ -2,6 +2,7 @@ import click
 
 from opkit import __version__
 from opkit.kit.kit import Kit
+from opkit.common.constants import TODAY_DIR
 
 
 echo = click.echo
@@ -150,6 +151,10 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
     exclude_arr = exclude.split(',') if exclude else None
 
     echo(grab_manager.wrap_echo(res, include_arr, exclude_arr))
+
+    if out:
+        echo("\n")
+        echo("Capture data and output it to the {} directory".format(TODAY_DIR))  # noqa
 
 
 def hack():
