@@ -67,7 +67,7 @@ function pull_opkit_shell() {
     local opkit_url="https://raw.githubusercontent.com/Oconnt/opkit/master/sh"
     for f in "${SH_FILE[@]}"
     do
-        curl -o /mry/sh/$f ${opkit_url}/$f 2&1 > /dev/null
+        curl --connect-timeout 10 -o /mry/sh/$f ${opkit_url}/$f > /dev/null 2>&1
         if [ $? -eq 0 ];then
             echo "${f} pull done."
         else

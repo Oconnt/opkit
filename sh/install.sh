@@ -207,7 +207,7 @@ cd $python_src
 
 # 设置环境变量
 source /mry/sh/common.sh
-add_profile 'export PATH=$PATH:"'"$dir"'/bin"'
+add_profile 'export PATH="$PATH:'"$dir"'/bin"'
 
 if [ ${version:0:1} == '3' ];then
     version_info=$(python3 -V)
@@ -217,6 +217,8 @@ fi
 
 if [ $? -eq 0 ];then
     echo "${version_info} 安装成功！"
+else
+    echo "${version_info} 安装失败！"
 fi
 
 # 清理压缩包和源码目录
@@ -250,16 +252,21 @@ mkdir -p $dir
 
 echo "======================开始下载${go_tar_file}到${dir}======================"
 wget -P $dir https://golang.google.cn/dl/${go_tar_file} && \
-tar Cxzvf $dir $dir/$go_tar_file && \
+tar Cxzvf $dir $dir/$go_tar_file
+
+add_profile 'export PATH="$PATH:'"$dir"'/go/bin"'
+add_profile 'export GOPROXY="https://goproxy.cn,direct;GOSUMDB=off"'
+
+version_info=$(go version)
+if [ $? -eq 0 ];then
+    echo "${version_info} 安装成功！"
+else
+    echo "${version_info} 安装失败！"
+fi
+
+# 清理压缩包
 rm -f $dir/$go_tar_file
 
-for f in ${dir}/go/bin/*;do
-    ln -sf $f /mry/bin/
-done
-
-add_profile 'export GOPROXY=https://goproxy.cn,direct;GOSUMDB=off'
-
-go version
 EOF
     else
         cat <<- 'EOF' > ${M_BIN}/mgo
@@ -280,13 +287,18 @@ cp /mry/resource/go/${go_tar_file} $dir/ && \
 tar Cxzvf $dir $dir/$go_tar_file && \
 rm -f $dir/$go_tar_file
 
-for f in ${dir}/go/bin/*;do
-    ln -sf $f /mry/bin/
-done
-
-go version
-
+add_profile 'export PATH="$PATH:'"$dir"'/bin"'
 echo "内网环境下，请自行配置GOPROXY代理！"
+
+version_info=$(go version)
+if [ $? -eq 0 ];then
+    echo "${version_info} 安装成功！"
+else
+    echo "${version_info} 安装失败！"
+fi
+
+# 清理压缩包
+rm -f $dir/$go_tar_file
 EOF
     fi
 
