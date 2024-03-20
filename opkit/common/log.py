@@ -1,6 +1,7 @@
 import datetime
 import os
 import logging
+import shutil
 
 from opkit.common.constants import (
     DEFAULT_LOG_FILE,
@@ -49,7 +50,7 @@ def _generate_log(log_name):
 
     # 创建today目录链接
     if os.path.exists(TODAY_DIR):
-        os.remove(TODAY_DIR)
+        os.unlink(TODAY_DIR)
 
     os.symlink(os.path.dirname(log), TODAY_DIR)
 
