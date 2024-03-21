@@ -179,9 +179,23 @@ function install_python() {
     if [ $M_MODE = "net" ];then
         cat <<- 'EOF' > ${M_BIN}/mpy
 version="$1"
+flag=0
+
+# 校验版本号格式
+IFS='.' read -r major minor patch <<< "$version"
 if [ -z $version ];then
     echo "请指定python版本!"
     exit 1
+elif ! [[ $major =~ ^[0-9]+$ ]] || ! [[ $minor =~ ^[0-9]+$ ]]; then
+    echo "主要版本号：$major，次要版本号：$minor，主要版本号和次要版本号必须为整数"
+    exit 1
+elif [ "$major" -gt 3 ] || [[ "$major" -eq 3 && "$minor" -gt 7 ]]; then
+    ssl_ver_flag=$(openssl version | awk '$2 > "1.0.2"')
+    if [[ ! $ssl_ver_flag ]]; then
+        echo "安装python 3.7及以上版本必须先更新openssl版本至1.0.2以上"
+        exit 1
+    fi
+    flag=1
 fi
 
 dir="/mry/lib/python/${version}"
@@ -203,7 +217,11 @@ fi
 
 # 编译安装
 cd $python_src
-./configure --prefix=$dir && make && make install
+if [ $flag -eq 0 ]; then
+    ./configure --prefix=$dir && make && make install
+else
+    ./configure --prefix=$dir --with-openssl=/usr/local/openssl && make && make install
+fi
 
 # 设置环境变量
 source /mry/sh/common.sh
@@ -305,6 +323,23 @@ EOF
     chmod +x ${M_BIN}/mgo
     linfo "mgo 安装成功！"
 }
+
+#function install_openssl() {
+#    if [ $M_MODE = "net" ];then
+#        cat <<- 'EOF' > ${M_BIN}/mssl
+#version=$1
+#ssl_tar=openssl-${version}.tar.gz
+#wget https://www.openssl.org/source/${ssl_tar} && tar -zxvf ${ssl_tar}
+#
+#EOF
+#    else
+#        cat <<- 'EOF' > ${M_BIN}/mssl
+#EOF
+#    fi
+#
+#    chmod +x ${M_BIN}/mssl
+#    linfo "mssl 安装成功"
+#}
 
 function install_k8s() {
     source /mry/sh/k8s.sh

@@ -21,7 +21,7 @@ class Manager(BaseManager):
         }
 
     def _grab(self,
-              prn=handle.output_log,
+              prn=handle.output_pcap,
               count=0,
               filters=None,
               timeout=None,
