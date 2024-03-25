@@ -32,26 +32,30 @@ def analysis(packet, decode="utf-8", cert_path=None):
 
     # 解析数据内容
     if packet.haslayer("Raw"):
-        packet_dict["data"] = _decode_raw(packet.getlayer("Raw"), decode, cert_path)  # noqa
+        data = _decode_raw(packet.getlayer("Raw"), decode, cert_path)
+        if data:
+            packet_dict["data"] = data
 
-    # 处理完毕后返回字典
     return packet_dict
 
 
 def _decode_raw(raw, decode="utf-8", cert_path=None):
     load = raw.load
 
-    if cert_path:
-        # 如果传入证书则提取私钥解密
-        try:
-            private_key = secret_util.get_private_from_file(cert_path)
-            secret_util.decrypt(load, private_key)
-        except Exception as e:
-            print("decrypt ciphertext failed， err: {}".format(e))
-            return load
-    else:
-        try:
-            return load.decode(decode)
-        except Exception as e:
-            print("decode raw fail, err: {}".format(e))
-            return load
+    if load:
+        if cert_path:
+            # 如果传入证书则提取私钥解密
+            try:
+                private_key = secret_util.get_private_from_file(cert_path)
+                return secret_util.decrypt(load, private_key)
+            except Exception as e:
+                print("decrypt ciphertext failed， err: {}".format(e))
+                return load
+        else:
+            try:
+                return load.decode(decode)
+            except Exception as e:
+                print("decode raw fail, err: {}".format(e))
+                return load
+
+    return

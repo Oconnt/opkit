@@ -18,7 +18,7 @@ def output_pcap(pcap_file=DEFAULT_PCAP_FILE, new=False):
 
         try:
             create_file(f)
-            wrpcap(f, pkg)
+            wrpcap(f, pkg, append=True)
         except ValueError as e:
             print("create to pcap file fail, err: {}".format(e))
             raise

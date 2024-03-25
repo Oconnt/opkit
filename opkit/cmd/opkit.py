@@ -151,10 +151,8 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
     exclude_arr = exclude.split(',') if exclude else None
 
     echo(grab_manager.wrap_echo(res, include_arr, exclude_arr))
-
-    if out:
-        echo("\n")
-        echo("Capture data and output it to the {} directory".format(TODAY_DIR))  # noqa
+    echo("\n")
+    echo("Capture data and output it to the {} directory".format(TODAY_DIR))
 
 
 def hack():
