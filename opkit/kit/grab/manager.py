@@ -3,7 +3,10 @@ from concurrent import futures
 import psutil
 from scapy.sendrecv import sniff
 
-from opkit.common.constants import MAX_WORKER, GrabOutFunc
+from scapy.layers.tls.session import TLSSession
+from scapy.main import load_layer
+
+from opkit.common.constants import MAX_WORKER
 from opkit.utils.os_util import get_netns_pids
 from opkit.kit.base import BaseManager
 from opkit.kit.grab import handle
@@ -13,7 +16,7 @@ class Manager(BaseManager):
     """ 抓包管理 """
 
     def __init__(self, init_workers=1, timeout=30):
-        self.pool = futures.ThreadPoolExecutor(max_workers=min(init_workers, MAX_WORKER))
+        self.pool = futures.ThreadPoolExecutor(max_workers=min(init_workers, MAX_WORKER))  # noqa
         self.timeout = timeout
         self.out_func = {
             'log': handle.output_log,

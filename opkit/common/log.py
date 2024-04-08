@@ -1,7 +1,6 @@
 import datetime
 import os
 import logging
-import shutil
 
 from opkit.common.constants import (
     DEFAULT_LOG_FILE,

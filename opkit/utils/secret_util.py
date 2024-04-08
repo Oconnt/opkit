@@ -39,7 +39,7 @@ def decrypt(ciphertext, private_key, passphrase=None):
     """
     key = RSA.import_key(private_key, passphrase)
     cipher = PKCS1_v1_5.new(key)
-    message = cipher.decrypt(ciphertext, None)
+    message = cipher.decrypt(base64.b64decode(ciphertext), None)
     return message.decode()
 
 

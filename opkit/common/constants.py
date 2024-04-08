@@ -10,9 +10,9 @@ MAX_WORKER = 10
 
 # =================================== grab ====================================
 # 默认garb日志文件
-DEFAULT_GRAB_LOG_FILE = "/var/log/opkit/today/grap.log"
+DEFAULT_GRAB_LOG_FILE = "/var/log/opkit/today/grab.log"
 # 默认pcap文件
-DEFAULT_PCAP_FILE = "/var/log/opkit/today/grap.pcap"
+DEFAULT_PCAP_FILE = "/var/log/opkit/today/grab.pcap"
 
 # ================================== logging ==================================
 # 默认文件目录
@@ -35,6 +35,10 @@ proto_table = {num: name[len(PREFIX):] for name, num in vars(socket).items()
 
 # ==================================== PEM ====================================
 PEM_START_FLAG = "BEGIN CERTIFICATE"
+
+# =================================== trace ===================================
+DEFAULT_START_ADDR = 0
+DEFAULT_END_ADDR = 0xFFFFFFFFFFFFFFFF
 
 
 class ValueEnum(Enum):
@@ -105,3 +109,9 @@ class GrabOutFunc(ValueEnum):
 
     LOG = 'log'
     PCAP = 'pcap'
+
+
+class TraceFlag(ValueEnum):
+
+    LIST = ['l', 'list']
+    WRITE = ['w', 'write']

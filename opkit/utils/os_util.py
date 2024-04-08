@@ -1,6 +1,6 @@
 import os
 import subprocess
-import sys
+import platform
 
 
 def is_exist(path):
@@ -21,6 +21,7 @@ def create_file(f_path):
                 os.chmod(f_path, 0o666)
         except OSError as e:
             print("Failed to create file {}: {}".format(f_path, e))
+            raise
     else:
         os.chmod(f_path, 0o666)
 
@@ -42,5 +43,5 @@ def get_netns_pids(namespace):
     return pids
 
 
-if __name__ == '__main__':
-    print(sys.argv)
+def is_linux():
+    return platform.system() == 'Linux'
