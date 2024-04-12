@@ -8,3 +8,4 @@ pycryptodome~=3.20.0
 crypto~=1.4.1
 cryptography~=41.0.0
 python-ptrace~=0.9.8
+pyrasite~=2.0

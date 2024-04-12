@@ -9,6 +9,7 @@ echo = click.echo
 
 
 @click.group(name='opkit',
+             no_args_is_help=True,
              help='The entry point for all system operation and '
                   'maintenance work, which can access various sub '
                   'functions through sub commands',
@@ -153,6 +154,66 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
     echo(grab_manager.wrap_echo(res, include_arr, exclude_arr))
     echo("\n")
     echo("Capture data and output it to the {} directory".format(TODAY_DIR))
+
+
+@opkit.command(no_args_is_help=True,
+               help='Process tracking command, which allows opkit tools to '
+                    'easily manipulate the memory of Python processes')
+@click.argument('pid', required=False)
+@click.argument('mode', required=False, default='r')
+@click.argument('args', nargs=-1, required=False, metavar='ARG [ARG2 ...]')  # noqa
+@click.option('-h', '--help',
+              is_flag=True,
+              help='Help info')
+def trace(pid, mode, args, help):
+    if help:
+        echo(click.get_current_context().get_help())
+        return
+
+    if not pid:
+        echo("Please enter PID\n")
+
+    if not args:
+        echo("Please enter kwargs\n")
+
+    trace_manager = Kit.load(
+        'trace',
+        **dict(pid=pid)
+    )
+
+    def parse_args(_args):
+        arg_vals = []
+        for arg in _args:
+            parts = arg.split(":")
+
+            val_str = parts[0].strip()
+            if len(parts) < 2:
+                type_str = ''
+            else:
+                type_str = parts[1].strip()
+
+            if type_str == 'int':
+                val = int(val_str)
+            elif type_str == 'float':
+                val = float(val_str)
+            elif type_str == 'bool':
+                val = bool(val_str)
+            elif type_str == 'str':
+                val = val_str
+            else:
+                try:
+                    val = eval(val_str)
+                except Exception:
+                    val = val_str
+
+            arg_vals.append(val)
+
+        return arg_vals
+
+    args = parse_args(args) if mode != 'x' else args
+    res = trace_manager.do(mode, *args)
+
+    echo(res)
 
 
 def hack():

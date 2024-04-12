@@ -39,6 +39,7 @@ PEM_START_FLAG = "BEGIN CERTIFICATE"
 # =================================== trace ===================================
 DEFAULT_START_ADDR = 0
 DEFAULT_END_ADDR = 0xFFFFFFFFFFFFFFFF
+SCRIPT_MOD = "opkit.kit.trace.script"
 
 
 class ValueEnum(Enum):
@@ -111,7 +112,6 @@ class GrabOutFunc(ValueEnum):
     PCAP = 'pcap'
 
 
-class TraceFlag(ValueEnum):
+class TraceMode(ValueEnum):
 
-    LIST = ['l', 'list']
-    WRITE = ['w', 'write']
+    READ = 'r'

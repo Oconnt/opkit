@@ -1,6 +1,7 @@
 from opkit.kit.monitor.manager import Manager as MonitorManager
 from opkit.kit.grab.manager import Manager as GrabManager
 from opkit.kit.hack.manager import Manager as HackManager
+from opkit.kit.trace.manager import Manager as TraceManager
 
 from opkit.utils.common_util import get_method_params
 
@@ -11,6 +12,7 @@ class Kit(object):
         'monitor': MonitorManager,
         'grab': GrabManager,
         'hack': HackManager,
+        'trace': TraceManager
     }
 
     def __str__(self):
