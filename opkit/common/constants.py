@@ -40,6 +40,19 @@ PEM_START_FLAG = "BEGIN CERTIFICATE"
 DEFAULT_START_ADDR = 0
 DEFAULT_END_ADDR = 0xFFFFFFFFFFFFFFFF
 SCRIPT_MOD = "opkit.kit.trace.script"
+NO_ARGS_MODES = ['mv']
+COMMAND_KEY_MAPPING = {
+    'x': 'exec_script',
+    'r': 'read',
+    'wv': 'write_val',
+    'da': 'dict_add',
+    'dd': 'dict_del',
+    'la': 'list_append',
+    'lr': 'list_remove',
+    'os': 'object_set',
+    'mv': 'mem_view',
+    'ri': 'rpdb_inject'
+}
 
 
 class ValueEnum(Enum):

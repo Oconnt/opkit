@@ -1,21 +1,9 @@
 import pyrasite
 import importlib
 
-from opkit.common.constants import SCRIPT_MOD
+from opkit.common.constants import SCRIPT_MOD, COMMAND_KEY_MAPPING
 from opkit.kit.base import BaseManager
 from opkit.utils import os_util
-
-
-COMMAND_KEY_MAPPING = {
-    'x': 'exec_script',
-    'r': 'read',
-    'wv': 'write_val',
-    'da': 'dict_add',
-    'dd': 'dict_del',
-    'la': 'list_append',
-    'lr': 'list_remove',
-    'os': 'object_set'
-}
 
 
 class Manager(BaseManager):
@@ -34,7 +22,9 @@ class Manager(BaseManager):
             'dict_del': self.dict_del,
             'list_append': self.list_append,
             'list_remove': self.list_remove,
-            'object_set': self.object_set
+            'object_set': self.object_set,
+            'mem_view': self.mem_view,
+            'rpdb_inject': self.rpdb_inject
         }
 
     @staticmethod
@@ -85,11 +75,22 @@ class Manager(BaseManager):
         ret = self.exec('object_set', obj=obj, var=self.convert_val(var), new_value=self.convert_val(new_value))  # noqa
         return ret
 
+    def mem_view(self):
+        ret = self.exec('mem_view')
+        return ret
+
     def exec_script(self, script):
         with self.ipc as ipc:
             ret = ipc.cmd(script)
 
         return ret
+
+    def rpdb_inject(self, port):
+        with self.ipc as ipc:
+            cmd = self.get_cmd('rpdb_inject', port=port)
+            ipc.send(cmd + '\n')
+
+        return 'Rpdb injected, please connect to {} port for debugging'.format(port)  # noqa
 
     def exec(self, filename, **kwargs):
         with self.ipc as ipc:

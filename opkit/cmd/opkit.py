@@ -2,7 +2,7 @@ import click
 
 from opkit import __version__
 from opkit.kit.kit import Kit
-from opkit.common.constants import TODAY_DIR
+from opkit.common.constants import TODAY_DIR, NO_ARGS_MODES
 
 
 echo = click.echo
@@ -156,9 +156,14 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
     echo("Capture data and output it to the {} directory".format(TODAY_DIR))
 
 
-@opkit.command(no_args_is_help=True,
-               help='Process tracking command, which allows opkit tools to '
-                    'easily manipulate the memory of Python processes')
+@opkit.command(
+    no_args_is_help=True,
+    help='Process tracking command, which allows opkit tools to '
+         'easily manipulate the memory of Python processes. the '
+         'currently supported modes are r(read) wv(write_val) '
+         'da(dict_add) dd(dict_del) la(list_append) lr(list_remove)'
+         'os(object_set) mv(mem_view) ri(rpdb_inject) x(exec_script)'
+)
 @click.argument('pid', required=False)
 @click.argument('mode', required=False, default='r')
 @click.argument('args', nargs=-1, required=False, metavar='ARG [ARG2 ...]')  # noqa
@@ -172,9 +177,11 @@ def trace(pid, mode, args, help):
 
     if not pid:
         echo("Please enter PID\n")
+        return
 
-    if not args:
+    if not args and mode not in NO_ARGS_MODES:
         echo("Please enter kwargs\n")
+        return
 
     trace_manager = Kit.load(
         'trace',
