@@ -19,6 +19,7 @@ CHECK_FILE_LIST=(
 
 function source_profile() {
     source $MRY_PROFILE
+    linfo "环境变量已刷新！"
 }
 
 function add_profile() {

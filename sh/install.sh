@@ -214,6 +214,8 @@ gcc -v &>/dev/null
 if [ $? -ne 0 ];then
     yum -y install gcc openssl-devel bzip2-devel libffi-devel
 fi
+# 安装zlib-devel
+yum -y install zlib-devel
 
 # 编译安装
 cd $python_src
