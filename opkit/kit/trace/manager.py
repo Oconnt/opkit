@@ -1,8 +1,17 @@
+import os
+import tempfile
 import pyrasite
 import importlib
 
-from opkit.common.constants import SCRIPT_MOD, COMMAND_KEY_MAPPING
+from opkit.common.constants import (
+    SCRIPT_MOD,
+    COMMAND_KEY_MAPPING,
+    LOCALHOST,
+    INJECTED
+)
 from opkit.kit.base import BaseManager
+from opkit.kit.trace import task as trace_task
+from opkit.kit.trace import script
 from opkit.utils import os_util
 
 
@@ -24,7 +33,8 @@ class Manager(BaseManager):
             'list_remove': self.list_remove,
             'object_set': self.object_set,
             'mem_view': self.mem_view,
-            'rpdb_inject': self.rpdb_inject
+            'rpdb_inject': self.rpdb_inject,
+            'opkit_rpdb_inject': self.opkit_rpdb_inject,
         }
 
     @staticmethod
@@ -33,7 +43,7 @@ class Manager(BaseManager):
         mod = importlib.import_module(path)
         cmd = mod.script_content
 
-        return cmd.format(**kwargs)
+        return cmd.format(**kwargs) if kwargs else cmd
 
     @staticmethod
     def convert_val(val):
@@ -85,13 +95,55 @@ class Manager(BaseManager):
 
         return ret
 
-    def rpdb_inject(self, port):
-        with self.ipc as ipc:
-            cmd = self.get_cmd('rpdb_inject', port=port)
-            ipc.send(cmd + '\n')
+    def rpdb_inject(self, port=0):
+        cmd = self.get_cmd('rpdb_inject', port=port)
+        fd, filename = tempfile.mkstemp()
+        tmp = os.fdopen(fd, 'w')
+        tmp.write(cmd)
+        tmp.close()
 
-        prompt = 'Rpdb injected, please connect to {} port for debugging, you can connect using nc or telnet'.format(port)  # noqa
-        return prompt
+        task = trace_task.InjectTask(self.pid, filename)
+        task.start()
+
+        prompt = 'pdb is running on %s:%d' % (LOCALHOST, port)
+        print(prompt)
+
+        task.join()
+
+        # clear tmp file
+        os.unlink(filename)
+
+        return INJECTED
+
+    def opkit_rpdb_inject(self, sock_file=None):
+        if not sock_file:
+            sock_file = '/tmp/rpdb_%d' % self.pid
+
+        if os.path.exists(sock_file):
+            os.remove(sock_file)
+
+        cmd = self.get_cmd('opkit_rpdb_inject')
+        fd, filename = tempfile.mkstemp()
+        tmp = os.fdopen(fd, 'w')
+        tmp.write(cmd)
+
+        start_script = script.opkit_rpdb_inject_start_line.format(sock_file=sock_file)  # noqa
+
+        tmp.write(start_script + '\n')
+        tmp.close()
+
+        task = trace_task.InjectTask(self.pid, filename)
+        task.start()
+
+        prompt = 'pdb is running on %s' % sock_file
+        print(prompt)
+
+        task.join()
+
+        # clear tmp file
+        os.unlink(filename)
+
+        return INJECTED
 
     def exec(self, filename, **kwargs):
         with self.ipc as ipc:

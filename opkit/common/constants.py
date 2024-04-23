@@ -40,7 +40,7 @@ PEM_START_FLAG = "BEGIN CERTIFICATE"
 DEFAULT_START_ADDR = 0
 DEFAULT_END_ADDR = 0xFFFFFFFFFFFFFFFF
 SCRIPT_MOD = "opkit.kit.trace.script"
-NO_ARGS_MODES = ['mv']
+NO_ARGS_MODES = ['mv', 'ri', 'ori']
 COMMAND_KEY_MAPPING = {
     'x': 'exec_script',
     'r': 'read',
@@ -51,8 +51,10 @@ COMMAND_KEY_MAPPING = {
     'lr': 'list_remove',
     'os': 'object_set',
     'mv': 'mem_view',
-    'ri': 'rpdb_inject'
+    'ri': 'rpdb_inject',
+    'ori': 'opkit_rpdb_inject'
 }
+INJECTED = 'injected'
 
 
 class ValueEnum(Enum):
@@ -90,36 +92,3 @@ class Unit(ValueEnum):
 
     PERCENT = "%"
 
-
-class CPUMetrics(ValueEnum):
-
-    USAGE_RATE = "usage_rate"
-    COUNT = "count"
-    HZ = "hz"
-
-
-class MemoryMetrics(ValueEnum):
-
-    USAGE_RATE = "usage_rate"
-    FREE = "free"
-    USED = "used"
-    TOTAL = "total"
-
-
-class DiskMetrics(ValueEnum):
-
-    USAGE_RATE = "usage_rate"
-    FREE = "free"
-    USED = "used"
-    TOTAL = "total"
-
-
-class NetworkMetrics(ValueEnum):
-
-    CONN_COUNT = "conn_count"
-
-
-class GrabOutFunc(ValueEnum):
-
-    LOG = 'log'
-    PCAP = 'pcap'

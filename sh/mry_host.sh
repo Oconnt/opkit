@@ -15,6 +15,7 @@ SH_FILE=(
     "common.sh"
     "install.sh"
     "k8s.sh"
+    "python_debug.sh"
 )
 
 
@@ -34,13 +35,14 @@ alias psg="ps -ef | grep"
 alias cpr="cp -r"
 alias rmrf="rm -rf"
 alias rmf="rm -f"
+alias cl="clear"
 alias sctl="systemctl"
 
 HISTFILE=~/.bash_history-$$
 HISTSIZE=1000
 TMOUT=36000
 
-export HISTFILE HISTSIZE TMOUT PATH="$PATH:/mry/bin"
+export HISTFILE HISTSIZE TMOUT PATH="$PATH:/mry/bin:/mry/sh"
 EOF
     chmod +rw $MRY_PROFILE
     source $MRY_PROFILE
