@@ -344,7 +344,16 @@ EOF
 #}
 
 function install_k8s() {
-    source /mry/sh/k8s.sh
+    if [ $M_MODE = "net" ];then
+        cat <<- 'EOF' > ${M_BIN}/mk8s
+source /mry/sh/k8s.sh
+EOF
+    else
+        lwarn "非互联网环境暂不支持使用mk8s"
+    fi
+
+    chmod +x ${M_BIN}/mk8s
+    linfo "mk8s 安装成功"
 }
 
 function set_mode() {
