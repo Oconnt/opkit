@@ -1,7 +1,5 @@
 #!/bin/bash
 
-ASKME=1
-
 function install_redis() {
     if [ $M_MODE = "net" ]; then
         cat <<- 'EOF' > ${M_BIN}/mredis
@@ -381,16 +379,8 @@ function mode_ch() {
 }
 
 function set_repo() {
-    if [ $ASKME -eq 1 ];then
-        read -rp "是否清理repo文件及元数据？(y/n): " flag
-        if [ $flag = 'y' ];then
-            rm -rf /etc/yum.repos.d/*
-            yum clean metadata
-        fi
-    else
-        rm -rf /etc/yum.repos.d/*
-        yum clean metadata
-    fi
+    rm -rf /etc/yum.repos.d/*
+    yum clean metadata
 
     if [ $M_MODE = "net" ]; then
         wget -P /etc/yum.repos.d/ http://mirrors.aliyun.com/repo/Centos-7.repo
@@ -452,11 +442,6 @@ fi
 
 # 判断是否是centos7
 check_system
-
-# 设置询问模式
-ASKME=${1:-$ASKME}
-linfo "询问模式：${ASKME}"
-shift
 
 # 初始化
 init_mry
