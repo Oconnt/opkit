@@ -1,3 +1,5 @@
+import sys
+
 import click
 
 from opkit import __version__
@@ -44,7 +46,7 @@ def opkit(version):
 def monitor(part, pid, info, help):
     if help:
         echo(click.get_current_context().get_help())
-        return
+        sys.exit(0)
 
     monitor_manager = Kit.load('monitor')
     wrap_func = monitor_manager.wrap_echo
@@ -120,7 +122,7 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
          namespace, mark, worker_params, timeout, out, include, exclude, help):
     if help:
         echo(click.get_current_context().get_help())
-        return
+        sys.exit(0)
 
     params = {
         'count': count,
@@ -164,8 +166,8 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
          'da(dict_add) dd(dict_del) la(list_append) lr(list_remove)'
          'os(object_set) mv(mem_view) ri(rpdb_inject) x(exec_script)'
 )
-@click.argument('pid', required=False)
-@click.argument('mode', required=False, default='r')
+@click.argument('pid', required=True)
+@click.argument('mode', required=True, default='r')
 @click.argument('args', nargs=-1, required=False, metavar='ARG [ARG2 ...]')  # noqa
 @click.option('-h', '--help',
               is_flag=True,
@@ -173,15 +175,15 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
 def trace(pid, mode, args, help):
     if help:
         echo(click.get_current_context().get_help())
-        return
+        sys.exit(0)
 
     if not pid:
-        echo("Please enter PID\n")
-        return
+        echo("Please enter PID")
+        sys.exit(1)
 
     if not args and mode not in NO_ARGS_MODES:
-        echo("Please enter kwargs\n")
-        return
+        echo("Please enter kwargs")
+        sys.exit(1)
 
     trace_manager = Kit.load(
         'trace',
