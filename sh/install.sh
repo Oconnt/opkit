@@ -188,9 +188,10 @@ elif ! [[ $major =~ ^[0-9]+$ ]] || ! [[ $minor =~ ^[0-9]+$ ]]; then
     echo "主要版本号：$major，次要版本号：$minor，主要版本号和次要版本号必须为整数"
     exit 1
 elif [ "$major" -gt 3 ] || [[ "$major" -eq 3 && "$minor" -gt 7 ]]; then
-    ssl_ver_flag=$(openssl version | awk '$2 > "1.0.2"')
+    ssl_ver_flag=$(openssl version | awk '$2 > "1.1.0"')
     if [[ ! $ssl_ver_flag ]]; then
-        echo "安装python 3.7及以上版本必须先更新openssl版本至1.0.2以上"
+        echo "安装python 3.7及以上版本必须先更新openssl版本至1.1.0以上"
+        echo "你可以使用mssl下载高版本的openssl"
         exit 1
     fi
     flag=1
@@ -207,20 +208,19 @@ wget -P $dir $download_url && tar Cxzvf $dir ${dir}/${python_tar_file}
 python_dir=$(tar tf ${dir}/${python_tar_file} | head -n 1 | cut -f1 -d"/")
 python_src=${dir}/${python_dir}
 
-# 先安装gcc等依赖
-gcc -v &>/dev/null
-if [ $? -ne 0 ];then
-    yum -y install gcc openssl-devel bzip2-devel libffi-devel
-fi
-# 安装zlib-devel
-yum -y install zlib-devel
+# 准备编译环境
+yum -y install gcc make zlib zlib-devel libffi libffi-devel readline-devel openssl-devel openssl11 openssl11-devel
 
 # 编译安装
 cd $python_src
 if [ $flag -eq 0 ]; then
     ./configure --prefix=$dir && make && make install
 else
-    ./configure --prefix=$dir --with-openssl=/usr/local/openssl && make && make install
+    if [[ -z $OPENSSL_PATH ]]; then
+        echo "请先设置环境变量OPENSSL_PATH或使用mssl下载openssl"
+    fi
+
+    ./configure --prefix=$dir --with-openssl=$OPENSSL_PATH && make && make install
 fi
 
 # 设置环境变量
@@ -324,22 +324,56 @@ EOF
     linfo "mgo 安装成功！"
 }
 
-#function install_openssl() {
-#    if [ $M_MODE = "net" ];then
-#        cat <<- 'EOF' > ${M_BIN}/mssl
-#version=$1
-#ssl_tar=openssl-${version}.tar.gz
-#wget https://www.openssl.org/source/${ssl_tar} && tar -zxvf ${ssl_tar}
-#
-#EOF
-#    else
-#        cat <<- 'EOF' > ${M_BIN}/mssl
-#EOF
-#    fi
-#
-#    chmod +x ${M_BIN}/mssl
-#    linfo "mssl 安装成功"
-#}
+function install_openssl() {
+    if [ $M_MODE = "net" ];then
+        cat <<- 'EOF' > ${M_BIN}/mssl
+version=$1
+ssl_tar="openssl-${version}.tar.gz"
+ssl_src="openssl-${version}"
+wget https://www.openssl.org/source/${ssl_tar} && tar -zxvf ${ssl_tar}
+tar -zxvf $ssl_tar
+cd $ssl_src
+
+# 安装perl依赖
+yum -y install perl-IPC-Cmd perl-Data-Dumper
+# 编译安装
+openssl_home="/usr/lib/openssl"
+./config --prefix=${openssl_home} && make && make install
+
+# 备份旧文件
+mv /usr/bin/openssl /usr/bin/openssl.bak
+mv /usr/include/openssl /usr/include/openssl.bak
+mv /usr/local/lib64/libssl.so /usr/local/lib64/libssl.so.bak
+
+# 修改超链接
+ln -s /usr/lib/openssl/include/openssl /usr/include/openssl
+ln -s /usr/lib/openssl/lib64/libssl.so.3 /usr/local/lib64/libssl.so
+ln -s /usr/lib/openssl/bin/openssl /usr/bin/openssl
+
+# 修改openssl搜索路径
+if ! grep -q "/usr/lib/openssl/lib64" /etc/ld.so.conf; then
+    echo "/usr/lib/openssl/lib64" >> /etc/ld.so.conf
+fi
+ldconfig -v
+
+source /mry/sh/common.sh
+add_profile "export OPENSSL_PATH=${openssl_home}"
+
+openssl_version=$(openssl version)
+openssl_path=$(which openssl)
+echo "${openssl_version} installed on ${openssl_path}"
+
+# 清理资源
+rm -rf $ssl_tar $ssl_src
+EOF
+    else
+        cat <<- 'EOF' > ${M_BIN}/mssl
+EOF
+    fi
+
+    chmod +x ${M_BIN}/mssl
+    linfo "mssl 安装成功"
+}
 
 function install_k8s() {
     if [ $M_MODE = "net" ];then
@@ -401,6 +435,7 @@ function install_all() {
     install_go
     install_redis
     install_k8s
+    install_openssl
 }
 
 function install_soft() {
@@ -424,6 +459,9 @@ function install_soft() {
                     ;;
                 go)
                     install_go
+                    ;;
+                openssl)
+                    install_openssl
                     ;;
                 *)
                     install_all
