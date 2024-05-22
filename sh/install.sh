@@ -194,6 +194,14 @@ elif [ "$major" -gt 3 ] || [[ "$major" -eq 3 && "$minor" -gt 7 ]]; then
         echo "你可以使用mssl下载高版本的openssl"
         exit 1
     fi
+
+    env_variables=("LDFLAGS" "CPPFLAGS" "PKG_CONFIG_PATH")
+    for env_variable in "${env_variables[@]}"; do
+        if [[ -z "${!env_variable}" ]]; then
+            echo "环境变量 $env_variable 不存在，请设置后重试"
+            exit 1
+        fi
+    done
     flag=1
 fi
 
@@ -358,6 +366,9 @@ ldconfig -v
 
 source /mry/sh/common.sh
 add_profile "export OPENSSL_PATH=${openssl_home}"
+add_profile "export LDFLAGS=" -L${openssl_home}/lib64""
+add_profile "export CPPFLAGS=" -I/usr/lib/openssl/include""
+add_profile "export PKG_CONFIG_PATH="/usr/lib/openssl/lib64/pkgconfig""
 
 openssl_version=$(openssl version)
 openssl_path=$(which openssl)
@@ -382,6 +393,7 @@ source /mry/sh/k8s.sh
 EOF
     else
         lwarn "非互联网环境暂不支持使用mk8s"
+        exit 1
     fi
 
     chmod +x ${M_BIN}/mk8s
@@ -391,7 +403,7 @@ EOF
 function set_mode() {
     # 测试次数增加到10次，减少误判率
     local ping_count=10
-    if ping -c ${ping_count} 8.8.8.8 >/dev/null 2>&1; then
+    if ping -c ${ping_count} www.baidu.com >/dev/null 2>&1; then
         M_MODE="net"
     else
         M_MODE="lan"
