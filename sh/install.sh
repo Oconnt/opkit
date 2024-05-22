@@ -148,6 +148,13 @@ mkdir -p $dir
 echo "=====================开始下载${java_tar_file}到${dir}====================="
 wget -P $dir ${download_url} && tar Cxzvf $dir $dir/$java_tar_file
 
+version_info=$(java -version)
+if [ $? -eq 0 ] && [[ $version_info == *"$version"* ]];then
+    echo "${version_info} 安装成功！"
+else
+    echo "java ${version} 安装失败！"
+fi
+
 # 设置动态链接
 java_dir=$(tar tf ${dir}/${java_tar_file} | head -n 1 | cut -f1 -d"/")
 java_home=${dir}/${java_dir}
@@ -157,8 +164,6 @@ done
 
 # 设置环境变量
 add_profile "export JAVA_HOME=${java_home}"
-
-java -version
 
 # 清理压缩包
 rm -f $dir/$java_tar_file
@@ -194,6 +199,14 @@ elif [ "$major" -gt 3 ] || [[ "$major" -eq 3 && "$minor" -gt 7 ]]; then
         echo "你可以使用mssl下载高版本的openssl"
         exit 1
     fi
+
+    env_variables=("LDFLAGS" "CPPFLAGS" "PKG_CONFIG_PATH")
+    for env_variable in "${env_variables[@]}"; do
+        if [[ -z "${!env_variable}" ]]; then
+            echo "环境变量 $env_variable 不存在，请设置后重试"
+            exit 1
+        fi
+    done
     flag=1
 fi
 
@@ -223,20 +236,20 @@ else
     ./configure --prefix=$dir --with-openssl=$OPENSSL_PATH && make && make install
 fi
 
-# 设置环境变量
-source /mry/sh/common.sh
-add_profile 'export PATH="$PATH:'"$dir"'/bin"'
-
 if [ ${version:0:1} == '3' ];then
     version_info=$(python3 -V)
 else
     version_info=$(python -V)
 fi
 
-if [ $? -eq 0 ];then
+# 设置环境变量
+source /mry/sh/common.sh
+add_profile 'export PATH="'"$dir"'/bin:$PATH"'
+
+if [ $? -eq 0 ] && [[ $version_info == *"$version"* ]];then
     echo "${version_info} 安装成功！"
 else
-    echo "${version_info} 安装失败！"
+    echo "python ${version} 安装失败！"
 fi
 
 # 清理压缩包和源码目录
@@ -272,14 +285,16 @@ echo "======================开始下载${go_tar_file}到${dir}=================
 wget -P $dir https://golang.google.cn/dl/${go_tar_file} && \
 tar Cxzvf $dir $dir/$go_tar_file
 
-add_profile 'export PATH="$PATH:'"$dir"'/go/bin"'
-add_profile 'export GOPROXY="https://goproxy.cn,direct;GOSUMDB=off"'
+# 设置环境变量
+add_profile 'export PATH="'"$dir"'/go/bin:$PATH"'
+add_profile 'export GOPROXY="https://goproxy.cn,direct"'
+add_profile 'export GOSUMDB=off'
 
 version_info=$(go version)
-if [ $? -eq 0 ];then
+if [ $? -eq 0 ] && [[ $version_info == *"$version"* ]];then
     echo "${version_info} 安装成功！"
 else
-    echo "${version_info} 安装失败！"
+    echo "go ${version} 安装失败！"
 fi
 
 # 清理压缩包
@@ -288,35 +303,6 @@ rm -f $dir/$go_tar_file
 EOF
     else
         cat <<- 'EOF' > ${M_BIN}/mgo
-version="$1"
-versions="1.16，1.17，1.18，1.19，1.20"
-if [[ -z "$version" || ! "$versions" == *"$version"* ]];then
-    echo "请指定正确的go版本，可选版本：${versions}"
-    exit 1
-fi
-
-source /mry/sh/common.sh
-arch=$(arch)
-go_tar_file="go${version}.linux-${arch}.tar.gz"
-dir="/mry/lib/go/${version}"
-mkdir -p $dir
-
-cp /mry/resource/go/${go_tar_file} $dir/ && \
-tar Cxzvf $dir $dir/$go_tar_file && \
-rm -f $dir/$go_tar_file
-
-add_profile 'export PATH="$PATH:'"$dir"'/bin"'
-echo "内网环境下，请自行配置GOPROXY代理！"
-
-version_info=$(go version)
-if [ $? -eq 0 ];then
-    echo "${version_info} 安装成功！"
-else
-    echo "${version_info} 安装失败！"
-fi
-
-# 清理压缩包
-rm -f $dir/$go_tar_file
 EOF
     fi
 
@@ -358,6 +344,9 @@ ldconfig -v
 
 source /mry/sh/common.sh
 add_profile "export OPENSSL_PATH=${openssl_home}"
+add_profile "export LDFLAGS=" -L${openssl_home}/lib64""
+add_profile "export CPPFLAGS=" -I/usr/lib/openssl/include""
+add_profile "export PKG_CONFIG_PATH="/usr/lib/openssl/lib64/pkgconfig""
 
 openssl_version=$(openssl version)
 openssl_path=$(which openssl)
@@ -382,6 +371,7 @@ source /mry/sh/k8s.sh
 EOF
     else
         lwarn "非互联网环境暂不支持使用mk8s"
+        exit 1
     fi
 
     chmod +x ${M_BIN}/mk8s
@@ -391,7 +381,7 @@ EOF
 function set_mode() {
     # 测试次数增加到10次，减少误判率
     local ping_count=10
-    if ping -c ${ping_count} 8.8.8.8 >/dev/null 2>&1; then
+    if ping -c ${ping_count} www.baidu.com >/dev/null 2>&1; then
         M_MODE="net"
     else
         M_MODE="lan"
