@@ -19,52 +19,16 @@ echo = click.echo
 @click.option('-v', '--version',
               is_flag=True,
               help="Get the opkit tool version number")
-def opkit(version):
+@click.option('-h', '--help',
+              is_flag=True,
+              help='Help info')
+def opkit(version, help):
     """ 程序入口 """
     if not click.get_current_context().invoked_subcommand:
         if version:
             echo(__version__)
         else:
             echo(click.get_current_context().get_help())
-
-
-@opkit.command(help='Monitor the resource usage and utilization rate of '
-                    'the system or process, and if no parameters are passed '
-                    'in, output the current operating system\'s resource '
-                    'usage rate by default')
-@click.option('-P', '--part',
-              help="Default load monitor, multiple separated by commas")
-@click.option('-p', '--pid',
-              help='Output monitoring information for the specified process')
-@click.option('-i', '--info',
-              is_flag=True,
-              help='Output process info, Need to be used '
-                   'in conjunction with - p')
-@click.option('-h', '--help',
-              is_flag=True,
-              help='Help info')
-def monitor(part, pid, info, help):
-    if help:
-        echo(click.get_current_context().get_help())
-        sys.exit(0)
-
-    monitor_manager = Kit.load('monitor')
-    wrap_func = monitor_manager.wrap_echo
-
-    params = dict()
-    if part:
-        part_arr = part.split(',')
-        params.update({'parts': part_arr})
-
-    if pid:
-        func = monitor_manager.proc_info \
-            if info else monitor_manager.proc_usage
-        params.update({'pid': pid})
-    else:
-        func = monitor_manager.os_usage
-
-    res = func(**params)
-    click.echo(wrap_func(res))
 
 
 @opkit.command(help='Based on the original packet capture tool encapsulation, '
@@ -166,8 +130,8 @@ def grab(count, worker, filters, iface, pid, protocol, sip, dip, sport, dport,
          'da(dict_add) dd(dict_del) la(list_append) lr(list_remove)'
          'os(object_set) mv(mem_view) ri(rpdb_inject) x(exec_script)'
 )
-@click.argument('pid', required=True)
-@click.argument('mode', required=True, default='r')
+@click.argument('pid', required=False)
+@click.argument('mode', required=False, default='r')
 @click.argument('args', nargs=-1, required=False, metavar='ARG [ARG2 ...]')  # noqa
 @click.option('-h', '--help',
               is_flag=True,
@@ -178,7 +142,7 @@ def trace(pid, mode, args, help):
         sys.exit(0)
 
     if not pid:
-        echo("Please enter PID")
+        echo("Please enter pid")
         sys.exit(1)
 
     if not args and mode not in NO_ARGS_MODES:
@@ -223,7 +187,3 @@ def trace(pid, mode, args, help):
     res = trace_manager.do(mode, *args)
 
     echo(res)
-
-
-def hack():
-    pass
